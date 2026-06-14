@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>AGNI — StudyBuddyZone AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --fire:#ff4500;--fire2:#ff6f00;--cyan:#00e5ff;--cyan2:#00b8d4;
+  --bg:#030a0f;--panel:rgba(0,18,30,0.92);
+  --border:rgba(0,229,255,0.13);--bfire:rgba(255,69,0,0.3);
+  --text:#c8e8f0;--dim:rgba(200,232,240,0.4);
+}
+
+html{height:100%;}
+body{
+  height:100%;background:var(--bg);color:var(--text);
+  font-family:'Inter',sans-serif;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  /* Fix mobile viewport */
+  position:fixed;width:100%;
+}
+
+/* BG effects */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(255,69,0,0.07),transparent 70%),
+             radial-gradient(ellipse 60% 60% at 0% 100%,rgba(0,229,255,0.04),transparent 60%);}
+.grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,229,255,0.025) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(0,229,255,0.025) 1px,transparent 1px);
+  background-size:44px 44px;animation:gm 25s linear infinite;}
+@keyframes gm{to{transform:translateY(44px)}}
+.scan{position:fixed;top:0;left:0;right:0;height:1px;z-index:1;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,0.5),transparent);
+  animation:sc 8s linear infinite;}
+@keyframes sc{from{top:-2px}to{top:100%}}
+
+/* CORNERS */
+.c{position:fixed;width:16px;height:16px;pointer-events:none;z-index:10;}
+.c.tl{top:0;left:0;border-top:2px solid var(--fire);border-left:2px solid var(--fire);}
+.c.tr{top:0;right:0;border-top:2px solid var(--fire);border-right:2px solid var(--fire);}
+.c.bl{bottom:0;left:0;border-bottom:2px solid var(--cyan2);border-left:2px solid var(--cyan2);}
+.c.br{bottom:0;right:0;border-bottom:2px solid var(--cyan2);border-right:2px solid var(--cyan2);}
+
+/* TOPBAR */
+.topbar{
+  position:relative;z-index:5;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;height:52px;flex-shrink:0;
+  border-bottom:1px solid var(--border);
+  background:rgba(3,10,15,0.97);backdrop-filter:blur(16px);}
+.logo-w{display:flex;align-items:center;gap:10px;}
+.menu-btn{background:transparent;border:1px solid var(--border);color:var(--cyan);
+  width:34px;height:34px;border-radius:4px;cursor:pointer;font-size:13px;
+  display:flex;align-items:center;justify-content:center;}
+.logo{font-family:'Orbitron',sans-serif;font-size:17px;font-weight:900;letter-spacing:4px;
+  background:linear-gradient(90deg,var(--fire),var(--fire2),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-sub{font-size:8px;color:var(--dim);letter-spacing:2px;font-family:'Share Tech Mono',monospace;}
+.top-r{display:flex;align-items:center;gap:8px;}
+.dot{width:7px;height:7px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px #00ff88;animation:p 2s infinite;}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.tbtn{background:transparent;border:1px solid var(--border);color:var(--cyan);
+  width:34px;height:34px;border-radius:4px;cursor:pointer;font-size:12px;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.tbtn.on{background:rgba(0,229,255,0.1);border-color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,0.2);}
+.tbtn.off{border-color:var(--bfire);color:var(--fire);}
+
+/* CHAT HEADER */
+.chat-hdr{
+  position:relative;z-index:4;
+  padding:8px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+  background:rgba(3,10,15,0.7);flex-shrink:0;}
+.chat-hdr-t{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cyan2);letter-spacing:1px;}
+#statusEl{margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);}
+
+/* MESSAGES — takes all remaining space */
+.msgs{
+  position:relative;z-index:2;
+  flex:1;overflow-y:auto;
+  padding:14px 12px;
+  display:flex;flex-direction:column;gap:12px;
+  -webkit-overflow-scrolling:touch;
+}
+.msgs::-webkit-scrollbar{width:2px;}
+.msgs::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.15);}
+
+.msg{display:flex;gap:8px;animation:mi .3s ease;max-width:90%;}
+@keyframes mi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.user{align-self:flex-end;flex-direction:row-reverse;}
+.av{width:28px;height:28px;border-radius:4px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:11px;border:1px solid;}
+.msg.bot .av{border-color:var(--bfire);color:var(--fire);background:rgba(255,69,0,.07);}
+.msg.user .av{border-color:var(--border);color:var(--cyan2);background:rgba(0,229,255,.05);}
+.bbl{padding:9px 12px;border-radius:5px;font-size:13px;line-height:1.65;word-break:break-word;}
+.msg.bot .bbl{background:rgba(255,69,0,.05);border:1px solid rgba(255,69,0,.18);border-left:3px solid var(--fire);color:var(--text);}
+.msg.user .bbl{background:rgba(0,229,255,.04);border:1px solid var(--border);border-right:3px solid var(--cyan2);color:var(--text);}
+
+.tdots{display:flex;gap:4px;padding:4px 0;align-items:center;}
+.tdots span{width:5px;height:5px;border-radius:50%;background:var(--fire);animation:tb 1.2s infinite;}
+.tdots span:nth-child(2){animation-delay:.2s}.tdots span:nth-child(3){animation-delay:.4s}
+@keyframes tb{0%,80%,100%{transform:scale(.7);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+/* INPUT ROW — pinned at top of bottom area */
+.input-area{
+  position:relative;z-index:5;flex-shrink:0;
+  padding:10px 12px;border-top:1px solid var(--border);
+  background:rgba(3,10,15,0.97);backdrop-filter:blur(12px);}
+
+/* QUICK BUTTONS above input */
+.quick-row{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:8px;padding-bottom:2px;}
+.quick-row::-webkit-scrollbar{height:2px;}
+.quick-row::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.15);}
+.qb{background:transparent;border:1px solid var(--border);color:var(--dim);
+  padding:5px 10px;border-radius:20px;cursor:pointer;white-space:nowrap;
+  font-size:11px;font-family:'Inter',sans-serif;transition:all .2s;flex-shrink:0;}
+.qb:hover,.qb:active{border-color:var(--cyan2);color:var(--cyan2);background:rgba(0,229,255,.05);}
+.qb.fire{border-color:var(--bfire);color:var(--fire2);}
+
+.inp-row{display:flex;gap:8px;align-items:flex-end;}
+#agniInput{
+  flex:1;background:rgba(0,229,255,.04);border:1px solid var(--border);
+  border-radius:6px;padding:10px 12px;color:var(--text);
+  font-family:'Inter',sans-serif;font-size:13px;
+  resize:none;outline:none;min-height:42px;max-height:100px;
+  transition:border-color .2s;-webkit-appearance:none;}
+#agniInput:focus{border-color:var(--cyan2);}
+#agniInput::placeholder{color:var(--dim);}
+.ibtn{border:none;width:42px;height:42px;border-radius:6px;cursor:pointer;
+  font-size:13px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .2s;}
+.send{background:linear-gradient(135deg,var(--fire),var(--fire2));color:#fff;
+  box-shadow:0 0 14px rgba(255,69,0,.3);}
+.send:hover{box-shadow:0 0 22px rgba(255,69,0,.5);}
+.send:disabled{opacity:.4;cursor:not-allowed;}
+.mic{background:transparent;border:1px solid var(--border);color:var(--dim);}
+.mic.active{border-color:var(--fire);color:var(--fire);background:rgba(255,69,0,.07);}
+
+/* SIDEBAR OVERLAY */
+.overlay{display:none;position:fixed;inset:0;z-index:19;background:rgba(0,0,0,.5);}
+.overlay.open{display:block;}
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;z-index:20;
+  width:220px;background:rgba(3,10,20,0.98);
+  border-right:1px solid var(--border);
+  padding:16px 12px;overflow-y:auto;
+  transform:translateX(-100%);transition:transform .3s;
+  display:flex;flex-direction:column;gap:10px;}
+.sidebar.open{transform:translateX(0);}
+.sb-close{align-self:flex-end;background:transparent;border:none;color:var(--dim);
+  font-size:18px;cursor:pointer;padding:4px;}
+.slbl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--fire);
+  letter-spacing:3px;padding-bottom:5px;border-bottom:1px solid var(--bfire);}
+
+/* ARC */
+.arc{margin:8px auto;width:68px;height:68px;position:relative;
+  display:flex;align-items:center;justify-content:center;}
+.ar{position:absolute;border-radius:50%;border:1px solid;animation:spin linear infinite;}
+.ar:nth-child(1){width:68px;height:68px;border-color:rgba(0,229,255,.3);animation-duration:9s;}
+.ar:nth-child(2){width:50px;height:50px;border-color:rgba(255,69,0,.35);animation-duration:5s;animation-direction:reverse;border-style:dashed;}
+.ar:nth-child(3){width:34px;height:34px;border-color:rgba(0,229,255,.5);animation-duration:3s;}
+.ac{width:16px;height:16px;border-radius:50%;
+  background:radial-gradient(circle,#fff 0%,var(--cyan) 50%,transparent 70%);
+  box-shadow:0 0 16px var(--cyan),0 0 32px rgba(0,229,255,.3);
+  animation:cg 2s ease-in-out infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes cg{0%,100%{box-shadow:0 0 16px var(--cyan),0 0 32px rgba(0,229,255,.3)}50%{box-shadow:0 0 26px var(--cyan),0 0 50px rgba(0,229,255,.5)}}
+
+.sqb{background:transparent;border:1px solid var(--border);color:var(--text);
+  padding:7px 10px;border-radius:4px;cursor:pointer;text-align:left;
+  font-size:12px;width:100%;transition:all .2s;display:flex;align-items:center;gap:8px;}
+.sqb:hover,.sqb:active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.05);}
+.sqb i{width:14px;color:var(--fire);font-size:11px;}
+.sqb.fire-btn{border-color:var(--bfire);color:var(--fire2);}
+.si{display:flex;justify-content:space-between;padding:4px 7px;
+  background:rgba(0,229,255,.03);border-radius:3px;margin-bottom:3px;}
+.sk{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dim);}
+.sv{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--cyan);}
+
+/* ══════════════════════════════════════
+   CINEMATIC INTRO SCREEN
+══════════════════════════════════════ */
+#introScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:#000;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  transition:opacity 1s ease;
+}
+#introScreen.hide{opacity:0;pointer-events:none;}
+
+/* ── PHASE 1: AI FACE ── */
+#facePhase{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.6s ease;
+}
+#facePhase.show{opacity:1;}
+#facePhase.out{opacity:0;}
+
+.face-canvas{
+  position:relative;width:280px;height:340px;
+}
+
+/* Digital face — built from CSS shapes */
+.face-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 80% at 50% 40%, rgba(80,0,120,0.3) 0%, transparent 70%);
+}
+
+/* Face outline */
+.face-shape{
+  position:absolute;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  width:160px;height:200px;
+  border-radius:50% 50% 45% 45%;
+  border:1px solid rgba(180,0,255,0.3);
+  box-shadow:0 0 30px rgba(180,0,255,0.2), inset 0 0 30px rgba(180,0,255,0.1);
+  background:radial-gradient(ellipse at 50% 30%, rgba(60,0,100,0.5) 0%, rgba(10,0,20,0.8) 60%);
+}
+
+/* LEFT EYE — scanning circle */
+.eye-left{
+  position:absolute;left:72px;top:100px;
+  width:48px;height:48px;
+  display:flex;align-items:center;justify-content:center;
+}
+.eye-left-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:1px solid rgba(0,229,255,0.8);
+  box-shadow:0 0 10px rgba(0,229,255,0.5);
+}
+.eye-left-scan{
+  position:absolute;inset:4px;border-radius:50%;
+  border-top:2px solid var(--cyan);
+  animation:eye-spin 1.5s linear infinite;
+}
+.eye-left-scan2{
+  position:absolute;inset:8px;border-radius:50%;
+  border-right:1px solid rgba(0,229,255,0.5);
+  animation:eye-spin 0.8s linear infinite reverse;
+}
+.eye-core{
+  width:12px;height:12px;border-radius:50%;
+  background:radial-gradient(circle,#fff 0%,var(--cyan) 40%,transparent 70%);
+  box-shadow:0 0 8px var(--cyan);
+  z-index:1;
+}
+@keyframes eye-spin{to{transform:rotate(360deg)}}
+
+/* RIGHT EYE — counter box */
+.eye-right{
+  position:absolute;right:62px;top:96px;
+  width:58px;height:52px;
+  border:1px solid rgba(0,229,255,0.6);
+  background:rgba(0,5,15,0.9);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.eye-right::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  animation:scan-line 0.8s linear infinite;
+}
+@keyframes scan-line{from{top:0}to{top:100%}}
+.counter-num{
+  font-family:'Share Tech Mono',monospace;font-size:20px;
+  color:var(--cyan);
+  text-shadow:0 0 10px var(--cyan);
+  position:relative;z-index:1;
+  line-height:1;
+}
+.counter-pct{
+  font-family:'Share Tech Mono',monospace;font-size:7px;
+  color:rgba(0,229,255,0.6);letter-spacing:1px;
+}
+
+/* Binary data scroll */
+.binary-scroll{
+  position:absolute;right:0;top:0;bottom:0;width:60px;
+  font-family:'Share Tech Mono',monospace;font-size:5px;
+  color:rgba(0,229,255,0.25);line-height:1.4;
+  overflow:hidden;white-space:pre;
+  pointer-events:none;
+}
+.binary-scroll2{
+  position:absolute;left:0;top:0;bottom:0;width:55px;
+  font-family:'Share Tech Mono',monospace;font-size:5px;
+  color:rgba(180,0,255,0.2);line-height:1.4;
+  overflow:hidden;white-space:pre;
+  pointer-events:none;
+}
+
+/* HUD overlay lines */
+.hud-line{
+  position:absolute;background:rgba(0,229,255,0.15);
+  pointer-events:none;
+}
+.hud-line.h{height:1px;left:0;right:0;}
+.hud-line.v{width:1px;top:0;bottom:0;}
+
+/* Corner brackets on face */
+.fc{position:absolute;width:12px;height:12px;}
+.fc.tl{top:68px;left:62px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan);}
+.fc.tr{top:68px;right:58px;border-top:2px solid var(--cyan);border-right:2px solid var(--cyan);}
+.fc.bl{bottom:40px;left:62px;border-bottom:2px solid rgba(180,0,255,0.7);border-left:2px solid rgba(180,0,255,0.7);}
+.fc.br{bottom:40px;right:58px;border-bottom:2px solid rgba(180,0,255,0.7);border-right:2px solid rgba(180,0,255,0.7);}
+
+/* Audio spectrum */
+.spectrum{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:flex-end;gap:2px;height:24px;width:120px;
+}
+.spec-bar{
+  width:3px;border-radius:1px 1px 0 0;
+  background:linear-gradient(to top,var(--fire),var(--cyan));
+  opacity:0.7;
+  animation:spec-anim var(--d,0.4s) ease-in-out infinite alternate;
+}
+@keyframes spec-anim{from{height:2px}to{height:var(--h,10px)}}
+
+/* Loading text */
+.loading-txt{
+  position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  color:rgba(180,0,255,0.8);letter-spacing:3px;
+  animation:blink 0.7s step-end infinite;
+  white-space:nowrap;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* Glitch effect on face */
+.glitch-overlay{
+  position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:linear-gradient(transparent 0%, rgba(0,229,255,0.03) 50%, transparent 100%);
+  animation:glitch-flash 0.15s step-end infinite;
+}
+@keyframes glitch-flash{0%{opacity:0;transform:translateX(0)}25%{opacity:1;transform:translateX(-2px)}75%{opacity:0;transform:translateX(2px)}100%{opacity:0}}
+
+/* ACTIVATE button */
+.activate-btn{
+  position:absolute;bottom:60px;left:50%;transform:translateX(-50%);
+  font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:4px;color:#fff;
+  background:transparent;
+  border:1px solid rgba(180,0,255,0.6);
+  padding:14px 40px;border-radius:3px;
+  cursor:pointer;z-index:10;
+  box-shadow:0 0 20px rgba(180,0,255,0.2),inset 0 0 20px rgba(180,0,255,0.05);
+  transition:all 0.3s;overflow:hidden;white-space:nowrap;
+}
+.activate-btn::before{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(180,0,255,0.2),transparent);
+  animation:btn-shine 2.5s ease-in-out infinite;
+}
+@keyframes btn-shine{to{left:200%;}}
+.activate-btn:hover{
+  border-color:rgba(180,0,255,1);
+  box-shadow:0 0 30px rgba(180,0,255,0.5),inset 0 0 30px rgba(180,0,255,0.1);
+  transform:translateX(-50%) scale(1.04);
+}
+.activate-btn:active{transform:translateX(-50%) scale(0.97);}
+.activate-btn:disabled{opacity:0.3;pointer-events:none;}
+
+/* STUDYBUDDYZONE label */
+.intro-top-label{
+  position:absolute;top:30px;left:50%;transform:translateX(-50%);
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  color:rgba(200,232,240,0.25);letter-spacing:4px;white-space:nowrap;
+}
+
+/* ── PHASE 2: HYPERDRIVE TUNNEL ── */
+#tunnelPhase{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+}
+#tunnelPhase.show{opacity:1;}
+#tunnelCanvas{width:100%;height:100%;}
+
+/* ── PHASE 3: NAME REVEAL ── */
+#namePhase{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 60% at 50% 50%, rgba(20,0,40,0.8) 0%, #000 70%);
+}
+#namePhase.show{opacity:1;}
+
+.reveal-name{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(36px,8vw,72px);
+  letter-spacing:clamp(4px,2vw,16px);
+  background:linear-gradient(90deg,#ff4500,#ff6f00,#ff00aa,#00e5ff);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:name-gradient 3s linear infinite;
+  transform:scale(0.3);opacity:0;
+  transition:transform 0.8s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease;
+  text-align:center;
+}
+.reveal-name.show{transform:scale(1);opacity:1;}
+@keyframes name-gradient{to{background-position:200% center}}
+
+.reveal-name-glow{
+  position:absolute;
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(36px,8vw,72px);
+  letter-spacing:clamp(4px,2vw,16px);
+  color:transparent;
+  text-shadow:0 0 40px rgba(255,69,0,0.6),0 0 80px rgba(0,229,255,0.3);
+  transform:scale(0.3);opacity:0;
+  transition:transform 0.8s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease;
+  text-align:center;pointer-events:none;
+}
+.reveal-name-glow.show{transform:scale(1);opacity:1;}
+
+.reveal-sub{
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+  color:rgba(200,232,240,0.5);letter-spacing:6px;
+  margin-top:16px;opacity:0;
+  transition:opacity 0.6s ease 0.4s;
+  text-align:center;
+}
+.reveal-sub.show{opacity:1;}
+
+.reveal-lines{
+  position:absolute;left:0;right:0;
+  height:1px;background:linear-gradient(90deg,transparent,rgba(0,229,255,0.5),transparent);
+  opacity:0;transition:opacity 0.3s ease;
+}
+.reveal-lines.show{opacity:1;}
+.reveal-lines.top{top:40%;}
+.reveal-lines.bot{bottom:40%;}
+</style>
+</head>
+<body>
+
+<!-- ── CINEMATIC INTRO SCREEN ── -->
+<div id="introScreen">
+
+  <!-- TOP LABEL -->
+  <div class="intro-top-label">STUDYBUDDYZONE · AI SYSTEM BOOT</div>
+
+  <!-- PHASE 1: AI FACE -->
+  <div id="facePhase">
+    <div class="face-canvas">
+      <div class="face-bg"></div>
+      <div class="face-shape"></div>
+
+      <!-- HUD lines -->
+      <div class="hud-line h" style="top:108px;opacity:0.3;"></div>
+      <div class="hud-line h" style="top:160px;opacity:0.2;"></div>
+      <div class="hud-line v" style="left:140px;opacity:0.15;"></div>
+
+      <!-- Corner brackets -->
+      <div class="fc tl"></div><div class="fc tr"></div>
+      <div class="fc bl"></div><div class="fc br"></div>
+
+      <!-- LEFT EYE scanning -->
+      <div class="eye-left">
+        <div class="eye-left-ring"></div>
+        <div class="eye-left-scan"></div>
+        <div class="eye-left-scan2"></div>
+        <div class="eye-core"></div>
+      </div>
+
+      <!-- RIGHT EYE counter -->
+      <div class="eye-right">
+        <div class="counter-num" id="counterNum">0</div>
+        <div class="counter-pct">%</div>
+      </div>
+
+      <!-- Binary data scrolls -->
+      <div class="binary-scroll" id="binaryR"></div>
+      <div class="binary-scroll2" id="binaryL"></div>
+
+      <!-- Audio spectrum -->
+      <div class="spectrum" id="spectrum"></div>
+
+      <!-- Loading text -->
+      <div class="loading-txt" id="loadingTxt">Loading...</div>
+
+      <!-- Glitch overlay -->
+      <div class="glitch-overlay"></div>
+    </div>
+  </div>
+
+  <!-- PHASE 2: HYPERDRIVE TUNNEL -->
+  <div id="tunnelPhase">
+    <canvas id="tunnelCanvas"></canvas>
+  </div>
+
+  <!-- PHASE 3: NAME REVEAL -->
+  <div id="namePhase">
+    <div class="reveal-lines top" id="lineTop"></div>
+    <div class="reveal-name-glow" id="revealGlow">AGNI AI</div>
+    <div class="reveal-name" id="revealName">AGNI AI</div>
+    <div class="reveal-sub" id="revealSub">STUDYBUDDYZONE · AI v1.0 · BY GOVIND</div>
+    <div class="reveal-lines bot" id="lineBot"></div>
+  </div>
+
+  <!-- ACTIVATE BUTTON -->
+  <button class="activate-btn" id="activateBtn" onclick="startCinematicIntro()">⚡ ACTIVATE</button>
+
+</div>
+<div class="grid"></div>
+<div class="scan"></div>
+<div class="c tl"></div><div class="c tr"></div>
+<div class="c bl"></div><div class="c br"></div>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <button class="sb-close" onclick="closeSidebar()"><i class="fa-solid fa-xmark"></i></button>
+  <div class="slbl">QUICK ACCESS</div>
+  <div class="arc"><div class="ar"></div><div class="ar"></div><div class="ar"></div><div class="ac"></div></div>
+  <button class="sqb" onclick="qs('Leaderboard दिखाओ')"><i class="fa-solid fa-trophy"></i>Leaderboard</button>
+  <button class="sqb" onclick="qs('Total students kitne hain?')"><i class="fa-solid fa-users"></i>Students</button>
+  <button class="sqb" onclick="qs('Premium ke kya fayde hain?')"><i class="fa-solid fa-star"></i>Premium</button>
+  <button class="sqb" onclick="qs('Subjects कौन से हैं?')"><i class="fa-solid fa-book"></i>Subjects</button>
+  <button class="sqb" onclick="qs('Battle Arena explain karo')"><i class="fa-solid fa-bolt"></i>Battle Arena</button>
+  <button class="sqb fire-btn" onclick="showIntro()"><i class="fa-solid fa-fire"></i>अग्नि से मिलो</button>
+  <div class="slbl" style="margin-top:6px;">SYSTEM</div>
+  <div class="si"><span class="sk">MODEL</span><span class="sv">AGNI v1</span></div>
+  <div class="si"><span class="sk">BORN</span><span class="sv">01.06.2026</span></div>
+  <div class="si"><span class="sk">BY</span><span class="sv">GOVIND</span></div>
+  <div class="si"><span class="sk">ENGINE</span><span class="sv">Claude Haiku</span></div>
+  <div class="si"><span class="sk">VOICE</span><span class="sv">ElevenLabs</span></div>
+</div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo-w">
+    <button class="menu-btn" onclick="openSidebar()"><i class="fa-solid fa-bars"></i></button>
+    <div>
+      <div class="logo">AGNI</div>
+      <div class="logo-sub">StudyBuddyZone · AI v1.0</div>
+    </div>
+  </div>
+  <div class="top-r">
+    <div class="dot"></div>
+    <button class="tbtn on" id="spkBtn" onclick="toggleSpk()">
+      <i class="fa-solid fa-volume-high"></i>
+    </button>
+  </div>
+</header>
+
+<!-- CHAT HEADER -->
+<div class="chat-hdr">
+  <i class="fa-solid fa-fire" style="color:var(--fire);font-size:10px;"></i>
+  <span class="chat-hdr-t">AGNI NEURAL INTERFACE</span>
+  <span id="statusEl">READY</span>
+</div>
+
+<!-- MESSAGES -->
+<div class="msgs" id="msgs">
+  <div class="msg bot">
+    <div class="av"><i class="fa-solid fa-fire"></i></div>
+    <div class="bbl">
+      <strong style="color:var(--fire);font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;">🔥 AGNI ONLINE</strong><br><br>
+      हाँ यार! मैं <strong>अग्नि</strong> हूं — Govind ने बनाया है मुझे, 1 जून 2026 को।
+      B.Tech First Year का कोई भी doubt हो — subjects, notes, PYQs, Battle Arena —
+      बस बोलो! हिंदी, मराठी, Hinglish, English — सब चलता है 😄
+    </div>
+  </div>
+</div>
+
+<!-- INPUT AREA — fixed at bottom -->
+<div class="input-area">
+  <!-- Quick pills -->
+  <div class="quick-row">
+    <button class="qb" onclick="qs('Subjects कौन से हैं?')">📚 Subjects</button>
+    <button class="qb" onclick="qs('Battle Arena explain karo')">⚔️ Battle</button>
+    <button class="qb" onclick="qs('PYQ papers kahan hain?')">📄 PYQs</button>
+    <button class="qb" onclick="qs('Premium ke kya fayde hain?')">⭐ Premium</button>
+    <button class="qb" onclick="qs('Aaj ki latest news kya hai?')">📰 News</button>
+    <button class="qb fire" onclick="showIntro()">🔥 अग्नि</button>
+  </div>
+  <div class="inp-row">
+    <textarea id="agniInput" placeholder="कुछ भी पूछो अग्नि से..." rows="1"
+      onkeydown="hk(event)" oninput="ar(this)"></textarea>
+    <button class="ibtn mic" id="micBtn" onclick="toggleMic()">
+      <i class="fa-solid fa-microphone"></i>
+    </button>
+    <button class="ibtn send" id="sendBtn" onclick="doSend()">
+      <i class="fa-solid fa-paper-plane"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// CINEMATIC INTRO
+// ══════════════════════════════════════
+
+// Build spectrum bars
+(function(){
+  var sp = document.getElementById('spectrum');
+  if(!sp) return;
+  var heights = [4,7,12,18,22,16,24,20,14,10,18,22,16,10,6,8,14,20,24,18,12,8,4,6,10];
+  heights.forEach(function(h,i){
+    var b = document.createElement('div');
+    b.className = 'spec-bar';
+    b.style.setProperty('--h', h+'px');
+    b.style.setProperty('--d', (0.2+Math.random()*0.5)+'s');
+    b.style.animationDelay = (i*0.04)+'s';
+    sp.appendChild(b);
+  });
+})();
+
+// Build binary scroll content
+function makeBinary(){
+  var chars = '01アイウエオカキクケコ∑∆Ω≡∫';
+  var lines = [];
+  for(var i=0;i<60;i++){
+    var line='';
+    for(var j=0;j<8;j++) line+=chars[Math.floor(Math.random()*chars.length)];
+    lines.push(line);
+  }
+  return lines.join('\n');
+}
+var bR = document.getElementById('binaryR');
+var bL = document.getElementById('binaryL');
+if(bR) bR.textContent = makeBinary();
+if(bL) bL.textContent = makeBinary();
+
+// Animate binary continuously
+setInterval(function(){
+  if(bR) bR.textContent = makeBinary();
+  if(bL) bL.textContent = makeBinary();
+}, 120);
+
+// ── COUNTER ANIMATION ──
+function animateCounter(el, start, end, duration, onDone){
+  var startTime = null;
+  function step(ts){
+    if(!startTime) startTime = ts;
+    var progress = Math.min((ts-startTime)/duration, 1);
+    var eased = progress < 0.5 ? 2*progress*progress : -1+(4-2*progress)*progress;
+    var val = Math.floor(start + (end-start)*eased);
+    el.textContent = val;
+    if(progress < 1) requestAnimationFrame(step);
+    else { el.textContent = end; if(onDone) onDone(); }
+  }
+  requestAnimationFrame(step);
+}
+
+// ── HYPERDRIVE TUNNEL (Canvas) ──
+var tunnelAnim = null;
+function startTunnel(){
+  var canvas = document.getElementById('tunnelCanvas');
+  var tp = document.getElementById('tunnelPhase');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  var ctx = canvas.getContext('2d');
+  var cx = canvas.width/2, cy = canvas.height/2;
+  var particles = [];
+  var speed = 2;
+
+  for(var i=0;i<300;i++){
+    var angle = Math.random()*Math.PI*2;
+    var radius = 5 + Math.random()*120;
+    particles.push({
+      x: cx + Math.cos(angle)*radius,
+      y: cy + Math.sin(angle)*radius,
+      z: Math.random()*canvas.width,
+      size: 1.5 + Math.random()*3,
+      color: Math.random()>0.4
+        ? 'rgba(255,'+(80+Math.floor(Math.random()*80))+',0,'
+        : 'rgba(255,'+(40+Math.floor(Math.random()*40))+',0,'
+    });
+  }
+
+  tp.style.opacity = '1';
+  var startTime = Date.now();
+
+  function draw(){
+    var elapsed = Date.now()-startTime;
+    speed = elapsed < 800 ? 2 + elapsed/80 : elapsed < 2000 ? 12 : Math.max(1, 12-(elapsed-2000)/100);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // Central glow
+    var grd = ctx.createRadialGradient(cx,cy,0,cx,cy,200);
+    grd.addColorStop(0,'rgba(255,80,0,0.06)');
+    grd.addColorStop(1,'transparent');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    particles.forEach(function(p){
+      var dx = p.x - cx, dy = p.y - cy;
+      var scale = canvas.width / p.z;
+      var sx = cx + dx*scale;
+      var sy = cy + dy*scale;
+      var sr = p.size * scale;
+
+      if(sx>0&&sx<canvas.width&&sy>0&&sy<canvas.height&&sr>0.3){
+        var alpha = Math.min(1, scale*0.5);
+
+        // Motion trail line
+        var prevScale = canvas.width / (p.z + speed*4);
+        var px2 = cx + dx*prevScale;
+        var py2 = cy + dy*prevScale;
+        ctx.beginPath();
+        ctx.moveTo(px2, py2);
+        ctx.lineTo(sx, sy);
+        ctx.strokeStyle = p.color + Math.min(alpha*0.5, 0.4)+')';
+        ctx.lineWidth = sr*0.8;
+        ctx.stroke();
+
+        // Particle dot
+        ctx.beginPath();
+        ctx.arc(sx, sy, Math.max(0.5, sr), 0, Math.PI*2);
+        ctx.fillStyle = p.color + alpha+')';
+        ctx.shadowColor = '#ff4500';
+        ctx.shadowBlur = sr*3;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      p.z -= speed;
+      if(p.z <= 1){
+        p.z = canvas.width;
+        var a2 = Math.random()*Math.PI*2;
+        var r2 = 5 + Math.random()*120;
+        p.x = cx + Math.cos(a2)*r2;
+        p.y = cy + Math.sin(a2)*r2;
+        p.size = 1.5 + Math.random()*3;
+      }
+    });
+
+    // Subtle tunnel rings
+    for(var r=40;r<280;r+=50){
+      ctx.beginPath();
+      ctx.arc(cx,cy,r,0,Math.PI*2);
+      ctx.strokeStyle = 'rgba(255,80,0,0.06)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    tunnelAnim = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function stopTunnel(){
+  if(tunnelAnim) cancelAnimationFrame(tunnelAnim);
+  var tp = document.getElementById('tunnelPhase');
+  tp.style.transition = 'opacity 0.5s';
+  tp.style.opacity = '0';
+}
+
+// ── MAIN CINEMATIC SEQUENCE ──
+function startCinematicIntro(){
+  var btn = document.getElementById('activateBtn');
+  btn.disabled = true;
+  btn.style.opacity = '0.3';
+
+  // Show face phase
+  var fp = document.getElementById('facePhase');
+  fp.classList.add('show');
+
+  // Animate counter: 0→20→32→61→100
+  var cEl = document.getElementById('counterNum');
+  var lt = document.getElementById('loadingTxt');
+
+  // Step 1: 0→20 fast
+  setTimeout(function(){
+    animateCounter(cEl, 0, 20, 400, function(){
+      // Step 2: 20→32
+      setTimeout(function(){
+        animateCounter(cEl, 20, 32, 300, function(){
+          // Step 3: 32→61
+          setTimeout(function(){
+            animateCounter(cEl, 32, 61, 500, function(){
+              // Step 4: 61→100
+              setTimeout(function(){
+                animateCounter(cEl, 61, 100, 600, function(){
+                  // Loading done
+                  lt.textContent = 'COMPLETE';
+                  lt.style.color = 'var(--cyan)';
+                  lt.style.animation = 'none';
+
+                  // Face fades out
+                  setTimeout(function(){
+                    fp.classList.add('out');
+                    fp.classList.remove('show');
+                    btn.style.display = 'none';
+
+                    // TUNNEL starts
+                    setTimeout(function(){
+                      startTunnel();
+
+                      // Tunnel runs for 2.5s then slows
+                      setTimeout(function(){
+                        // NAME REVEAL
+                        stopTunnel();
+                        setTimeout(function(){
+                          var np = document.getElementById('namePhase');
+                          np.classList.add('show');
+
+                          setTimeout(function(){
+                            document.getElementById('revealName').classList.add('show');
+                            document.getElementById('revealGlow').classList.add('show');
+                            document.getElementById('lineTop').classList.add('show');
+                            document.getElementById('lineBot').classList.add('show');
+                          }, 100);
+
+                          setTimeout(function(){
+                            document.getElementById('revealSub').classList.add('show');
+                          }, 500);
+
+                          // Enter chat after 2.5s
+                          setTimeout(function(){
+                            document.getElementById('introScreen').classList.add('hide');
+                          }, 2500);
+
+                        }, 400);
+                      }, 2500);
+                    }, 200);
+                  }, 600);
+                });
+              }, 200);
+            });
+          }, 300);
+        });
+      }, 200);
+    });
+  }, 300);
+} // end startCinematicIntro
+
+// ── CONFIG ──────────────────────────────────
+var MISTRAL_KEY = '4w8lTi8vuBpjLRkRXoUa7peY9lslLKge';
+
+var speakerOn = true;
+var busy = false;
+var micOn = false;
+var chatHistory = [];
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+var micRec = null;
+
+// ── SIDEBAR ────────────────────────────────
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ── SPEAKER ───────────────────────────────
+function toggleSpk(){
+  speakerOn = !speakerOn;
+  var b = document.getElementById('spkBtn');
+  if(speakerOn){
+    b.innerHTML='<i class="fa-solid fa-volume-high"></i>';
+    b.className='tbtn on';
+  } else {
+    b.innerHTML='<i class="fa-solid fa-volume-xmark"></i>';
+    b.className='tbtn off';
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+}
+
+// ── TTS ───────────────────────────────────
+async function speak(text){
+  if(!speakerOn) return;
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+
+  var clean = text
+    .replace(/<[^>]*>/g,' ')
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu,'')
+    .replace(/[\u{2600}-\u{27BF}]/gu,'')
+    .replace(/[😄😅😊😂🙏]/g,'')
+    .replace(/[*_~`#>|\\[\](){}]/g,' ')
+    .replace(/\s+/g,' ').trim();
+  if(!clean) return;
+
+  bTTS(clean);
+}
+
+function bTTS(text){
+  if(!window.speechSynthesis) return;
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang='hi-IN'; u.pitch=1.2; u.rate=0.85; u.volume=1;
+  // Try to pick a female Hindi voice
+  var voices = window.speechSynthesis.getVoices();
+  var v = voices.find(function(x){return x.lang.startsWith('hi') && x.name.toLowerCase().includes('female');})
+       || voices.find(function(x){return x.lang.startsWith('hi');})
+       || voices.find(function(x){return x.lang.startsWith('en-IN');});
+  if(v) u.voice = v;
+  window.speechSynthesis.speak(u);
+}
+
+// Load voices early (Chrome needs this)
+if(window.speechSynthesis){
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = function(){window.speechSynthesis.getVoices();};
+}
+
+// ── AI ────────────────────────────────────
+var SYS = 'तू AGNI है। Govind ने बनाया, जन्म 1 जून 2026। StudyBuddyZone की AI दोस्त, B.Tech FY DBATU।\n\nतू 17-18 साल की bindaas लड़की है — casual, friendly, WhatsApp जैसी बात। "आप" कभी नहीं, हमेशा "तू" "तेरा"। Bullets/stars/dashes use मत कर। Emojis max 2। पूरा helpful जवाब दे 4-6 lines में। बीच में दोस्ताना बातें मिला।\n\nPlatform: Subjects (Maths 1-2, Physics, Chemistry, Engg Drawing, C/Python, Electrical, EVS, Comm Skills), Battle Arena, Solo MCQ, PYQs, Notes, Question Bank, Certificates, Roles (Student/Premium/Master)।';
+
+async function callAI(text){
+  chatHistory.push({role:'user', content:text});
+  var msgs = chatHistory.slice(-12);
+
+  var res = await fetch('https://api.mistral.ai/v1/chat/completions',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+MISTRAL_KEY
+    },
+    body:JSON.stringify({
+      model:'mistral-small-latest',
+      max_tokens:600,
+      messages:[
+        {role:'system', content:SYS}
+      ].concat(msgs)
+    })
+  });
+
+  if(!res.ok){
+    var e = await res.text();
+    throw new Error(res.status+': '+e);
+  }
+  var d = await res.json();
+  var reply = d.choices[0].message.content || '';
+  chatHistory.push({role:'assistant', content:reply});
+  return reply;
+}
+
+// ── MESSAGES ──────────────────────────────
+function addMsg(html, isUser){
+  var box = document.getElementById('msgs');
+  var d = document.createElement('div');
+  d.className = 'msg '+(isUser?'user':'bot');
+  var ico = isUser
+    ? '<i class="fa-solid fa-user"></i>'
+    : '<i class="fa-solid fa-fire"></i>';
+  d.innerHTML = '<div class="av">'+ico+'</div><div class="bbl">'+html+'</div>';
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+function showTyping(){
+  var box = document.getElementById('msgs');
+  var d = document.createElement('div');
+  d.id='typing';d.className='msg bot';
+  d.innerHTML='<div class="av"><i class="fa-solid fa-fire"></i></div>'
+    +'<div class="bbl"><div class="tdots"><span></span><span></span><span></span></div></div>';
+  box.appendChild(d);
+  box.scrollTop=box.scrollHeight;
+}
+function hideTyping(){var t=document.getElementById('typing');if(t)t.remove();}
+function setStatus(s){var e=document.getElementById('statusEl');if(e)e.textContent=s;}
+
+// ── SEND ──────────────────────────────────
+async function doSend(override){
+  if(busy) return;
+  var inp = document.getElementById('agniInput');
+  var text = (override !== undefined ? override : inp.value).trim();
+  if(!text) return;
+
+  busy = true;
+  if(override === undefined){inp.value='';ar(inp);}
+  document.getElementById('sendBtn').disabled = true;
+  setStatus('THINKING...');
+  closeSidebar();
+  inp.blur(); // hide keyboard on mobile while processing
+
+  addMsg(text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'), true);
+  showTyping();
+
+  try{
+    var reply = await callAI(text);
+    hideTyping();
+    if(!reply||reply.trim().length<2) reply='Yaar kuch samajh nahi aaya, thoda detail mein bata? 😅';
+    addMsg(reply.replace(/\n/g,'<br>'), false);
+    speak(reply);
+  } catch(e){
+    hideTyping();
+    console.error('[AGNI]', e);
+    // Show actual error for debugging
+    var em = e.message||'Unknown error';
+    addMsg('Error: '+em+'<br><small style="color:var(--dim)">Console check karo F12</small>', false);
+  } finally{
+    busy = false;
+    document.getElementById('sendBtn').disabled = false;
+    setStatus('READY');
+  }
+}
+
+window.qs = function(t){ doSend(t); };
+
+// ── INTRO ─────────────────────────────────
+window.showIntro = function(){
+  closeSidebar();
+  addMsg(
+    '<strong style="color:var(--fire);font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:2px;">🔥 AGNI — Small Language Model</strong><br>'
+    +'<span style="font-size:9px;color:var(--dim);font-family:Share Tech Mono,monospace;">CREATED BY GOVIND · BORN 01.06.2026</span><br><br>'
+    +'हाँ यार, मैं <strong>अग्नि</strong> हूं! Govind ने बनाया है मुझे एक Small Language Model के रूप में। '
+    +'मेरा जन्म 1 जून 2026 को हुआ। मैं StudyBuddyZone की अपनी AI हूं — B.Tech First Year AKTU के लिए। '
+    +'कोई भी doubt हो — Subjects, PYQs, Battle Arena — सब पूछो 😄', false);
+  speak('हाँ यार! मैं अग्नि हूं। Govind ने बनाया है मुझे। एक जून दो हज़ार छब्बीस को जन्म हुआ मेरा। बोलो क्या चाहिए!');
+};
+
+// ── MIC ───────────────────────────────────
+window.toggleMic = function(){
+  var btn = document.getElementById('micBtn');
+  if(!SR){ addMsg('Mic is browser mein support nahi hai 😅', false); return; }
+  if(micOn){
+    if(micRec) micRec.stop();
+    micOn=false; btn.classList.remove('active'); return;
+  }
+  micRec = new SR();
+  micRec.lang='hi-IN'; micRec.continuous=false; micRec.interimResults=false;
+  micRec.onstart = function(){micOn=true;btn.classList.add('active');};
+  micRec.onresult = function(e){
+    var t = e.results[0][0].transcript;
+    document.getElementById('agniInput').value=t;
+    doSend();
+  };
+  micRec.onend = function(){micOn=false;btn.classList.remove('active');};
+  micRec.onerror = function(){micOn=false;btn.classList.remove('active');};
+  micRec.start();
+};
+
+// ── UTILS ─────────────────────────────────
+function hk(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();}}
+function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+</script>
+</body>
+</html>
